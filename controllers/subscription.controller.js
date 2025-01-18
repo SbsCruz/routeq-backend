@@ -15,7 +15,7 @@ exports.getSubscriptions = async (req, res) => {
     try {
         const subscriptions = await Subscription.find()
             .populate('userId', 'firstName lastName email') // Información del usuario
-            .populate('routeId', 'startPoint endPoint departureTime'); // Información de la ruta
+            .populate('routeId', 'departureTime'); // Información de la ruta
         res.status(200).json(subscriptions);
     } catch (error) {
         res.status(500).json({ message: error.message });
