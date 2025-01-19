@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const driverSchema = new mongoose.Schema({
+    firebaseId: {tpe: String, unique: true},
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     birthDate: { type: Date, required: true },
