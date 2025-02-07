@@ -1,4 +1,5 @@
 const User = require("../models/user.model");
+const admin = require("firebase-admin");
 const Subscription = require("../models/subscription.model");
 
 exports.getAllUsers = async (req, res) => {
@@ -12,16 +13,38 @@ exports.getAllUsers = async (req, res) => {
 
 exports.createUser = async (req, res) => {
     try {
-        const newUser = new User(req.body);
+        const token = req.headers.authorization?.split(" ")[1]; // Extraer token del header
+        if (!token) return res.status(401).json({ message: "No token provided" });
+
+        // Verificar el token con Firebase y obtener el UID
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        const firebaseId = decodedToken.uid;
+
+        // Verificar si el usuario ya existe en la base de datos
+        const existingUser = await User.findOne({ firebaseId });
+        if (existingUser) {
+            return res.status(400).json({ message: "User already exists" });
+        }
+
+        // Crear el usuario en la base de datos con el UID de Firebase
+        const newUser = new User({
+            firebaseId,
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            birthDate: req.body.birthDate,
+            idNumber: req.body.idNumber,
+            phone: req.body.phone,
+            email: req.body.email
+        });
+
         const savedUser = await newUser.save();
-        console.log("Creating user...")
+        console.log("User created successfully");
         res.status(201).json(savedUser);
     } catch (error) {
-        console.log("Error while creating user...")
+        console.error("Error while creating user:", error);
         res.status(400).json({ message: error.message });
     }
 };
-
 
 // Obtener perfil del usuario
 exports.getUserProfile = async (req, res) => {
