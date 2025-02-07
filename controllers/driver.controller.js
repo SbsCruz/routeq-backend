@@ -1,17 +1,45 @@
 const Driver = require("../models/driver.model");
 const Car = require("../models/car.model");
 const Route = require("../models/route.model");
+const admin = require("firebase-admin");
 
 exports.createDriver = async (req, res) => {
     try {
-        console.log(req.body); // Depuración
-        const newDriver = new Driver(req.body);
+        const token = req.headers.authorization?.split(" ")[1]; // Extraer token del header
+        if (!token) return res.status(401).json({ message: "No token provided" });
+
+        // Verificar el token con Firebase y obtener el UID
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        const firebaseId = decodedToken.uid;
+
+        // Verificar si el conductor ya existe en la base de datos
+        const existingDriver = await Driver.findOne({ firebaseId });
+        if (existingDriver) {
+            return res.status(400).json({ message: "Driver already exists" });
+        }
+
+        // Crear el conductor en la base de datos con el UID de Firebase
+        const newDriver = new Driver({
+            firebaseId,
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            birthDate: req.body.birthDate,
+            idNumber: req.body.idNumber,
+            phone: req.body.phone,
+            email: req.body.email,
+            carId: req.body.carId || null, // Si no tiene auto, asigna null
+            travelNumber: req.body.travelNumber || 0 // Por defecto, inicia en 0 viajes
+        });
+
         const savedDriver = await newDriver.save();
+        console.log("Driver created successfully");
         res.status(201).json(savedDriver);
     } catch (error) {
+        console.error("Error while creating driver:", error);
         res.status(400).json({ message: error.message });
     }
 };
+
 
 
 exports.getDrivers = async (req, res) => {
@@ -57,7 +85,7 @@ exports.getCarInfo = async (req, res) => {
         if (!driver) return res.status(404).json({ message: "Driver not found" });
 
         // Extrae la información del carro desde el conductor
-        const car = driver.carId; 
+        const car = driver.carId;
         if (!car) return res.status(404).json({ message: "Car not found for this driver" });
 
         res.status(200).json(car);
