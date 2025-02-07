@@ -5,12 +5,19 @@ const driverRoutes = require('./routes/driver.route');
 const carRoutes = require('./routes/car.route');
 const routeRoutes = require('./routes/route.route');
 const subscriptionRoutes = require('./routes/subscription.route');
+const admin = require('firebase-admin'); // nos provee el sdk para conectarnos a los diferentes servicios de Firebase - todos los servicios
+
 
 const app = express();
 const PORT = 3000;
 
 // Middleware
 app.use(express.json());
+
+const serviceAccount = require('./firebase-adminsdk.json');
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
  
 // Database connection
 connectDB();
