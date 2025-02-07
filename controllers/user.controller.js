@@ -47,3 +47,25 @@ exports.updateUserProfile = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+exports.getUserSubscriptions = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Verificar si el usuario existe
+        const user = await User.findById(id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Obtener las suscripciones del usuario con detalles de la ruta
+        const subscriptions = await Subscription.find({ userId: id })
+            .populate('routeId', 'startPoint endPoint departureTime availableSeats');
+
+        if (subscriptions.length === 0) {
+            return res.status(404).json({ message: "No subscriptions found for this user" });
+        }
+
+        res.status(200).json(subscriptions);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
