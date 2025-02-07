@@ -5,7 +5,7 @@ const User = require('../models/user.model'); // Para obtener información de lo
 // Crear una nueva suscripción y reducir asientos disponibles
 exports.createSubscription = async (req, res) => {
     try {
-        const { userId, routeId } = req.body;
+        const { userId, routeId, pickUpLong, pickUpLat } = req.body;
 
         // Verificar si la ruta existe
         const route = await Route.findById(routeId);
@@ -23,7 +23,7 @@ exports.createSubscription = async (req, res) => {
         }
 
         // Crear la suscripción
-        const newSubscription = new Subscription({ userId, routeId, subscriptionDate: new Date() });
+        const newSubscription = new Subscription({ userId, routeId, subscriptionDate: new Date(), pickUpLat, pickUpLong });
         await newSubscription.save();
 
         // Reducir los asientos disponibles en la ruta
